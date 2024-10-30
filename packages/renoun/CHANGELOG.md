@@ -1,5 +1,78 @@
 # renoun
 
+## 7.0.0
+
+### Major Changes
+
+- 90bbe5b: Simplifies how `baseDirectory` works for `Collection`. This was from a legacy implementation that was not well thought out and caused confusion. This change makes it more explicit and easier to understand.
+
+  ### Breaking Changes
+
+  The `baseDirectory` option for `Collection` is now required to be separate from `filePattern`:
+
+  ```diff
+  import { Collection } from 'renoun/collections'
+
+  const components = new Collection({
+  --  filePattern: 'src/components/**/*.ts',
+  ++  filePattern: '**/*.ts',
+  --  baseDirectory: 'components',
+  ++  baseDirectory: 'src/components',
+  })
+  ```
+
+- 7cbb112: Updates the `<Collection>.getSource` method to be asynchronous and return a `Promise` that resolves to the source. This allows for more flexibility for a source to communicate with the web socket server.
+
+  ### Breaking Changes
+
+  The `getSource` method for a `Collection` and `CompositeCollection` now returns a `Promise` that resolves to the source. This means that you will need to `await` the result when calling this method:
+
+  ```diff
+  import { Collection } from 'renoun/collections'
+
+  const posts = new Collection({
+    filePattern: 'posts/*.mdx',
+  })
+
+  export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
+  --  const post = posts.getSource(params.slug)
+  ++  const post = await posts.getSource(params.slug)
+
+    if (!post) {
+      return <div>Post not found</div>
+    }
+
+    const Content = await post.getExport('default').getValue()
+
+    return <Content />
+  }
+  ```
+
+### Minor Changes
+
+- b2ba1e4: Adds `renoun/server` export for more control of running the WebSocket server. For example, in Next.js this can be used with the `instrumentation.ts` file:
+
+  ```ts
+  import { createServer } from 'renoun/server'
+
+  export async function register() {
+    if (
+      process.env.NODE_ENV === 'development' &&
+      process.env.NEXT_RUNTIME === 'nodejs'
+    ) {
+      createServer()
+    }
+  }
+  ```
+
+### Patch Changes
+
+- 359e5e7: Fixes `APIReference` component not allowing `FileSystemSource`.
+- ef4448e: Fixes client and server collections getting out of sync causing an error when resolving types from updated files.
+- 7020585: Updates all dependencies to latest version.
+- Updated dependencies [7020585]
+  - @renoun/mdx@1.2.1
+
 ## 6.1.0
 
 ### Minor Changes
